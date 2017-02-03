@@ -1,0 +1,23 @@
+<idea-plugin version="2">
+
+  <id>pro.kondratev.wicketlambdafold</id>
+  <name>WicketLambdaFold</name>
+  <version>0.1</version>
+  <vendor email="andrew@kondratev.pro">Andrew Kondratev</vendor>
+
+  <description>
+    Folds/Shortens wicket lambda model's getter and setter references.
+    So LambdaModel.of(model, Entity::getSomething, Entity::setSomething)
+    becomes LambdaModel.of(model, Entity::get/setSomething).
+  </description>
+
+  <idea-version since-build="145.0"/>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <lang.foldingBuilder language="JAVA" implementationClass="pro.kondratev.wicketlambdafold.LambdaModelFoldingBuilder"/>
+  </extensions>
+
+  <actions>
+  </actions>
+
+</idea-plugin>
