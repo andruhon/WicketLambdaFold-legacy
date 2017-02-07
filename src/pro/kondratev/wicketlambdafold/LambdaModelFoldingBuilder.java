@@ -4,7 +4,6 @@ import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.FoldingBuilderEx;
 import com.intellij.lang.folding.FoldingDescriptor;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.FoldingGroup;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -12,61 +11,71 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class LambdaModelFoldingBuilder extends FoldingBuilderEx {
+    private static final String GET_PREFIX = "::get";
+    private static final String IS_PREFIX = "::is";
+    private static final String SET_PREFIX = "::set";
+    private static final String SET_SUFFIX = "/set";
+
     @NotNull
     @Override
     public FoldingDescriptor[] buildFoldRegions(@NotNull PsiElement root, @NotNull Document document, boolean b) {
-        FoldingGroup group = FoldingGroup.newGroup("lambdaModel");
         List<FoldingDescriptor> descriptors = new ArrayList<>();
-        Collection<PsiImportStatement> importStatements = PsiTreeUtil.findChildrenOfType(root, PsiImportStatement.class);
-        Collection<PsiMethodCallExpression> expressions = PsiTreeUtil.findChildrenOfType(root, PsiMethodCallExpression.class);
 
-
-        // Is wicket lambda model imported into this class?
-        boolean lambdaModelImported = importStatements.parallelStream()
+        boolean lambdaModelImported = PsiTreeUtil.findChildrenOfType(root, PsiImportStatement.class).stream()
                 .anyMatch(statement -> "org.apache.wicket.model.LambdaModel".equals(statement.getQualifiedName()));
 
         if (lambdaModelImported) {
-            expressions.stream()
-                    .filter(expression -> "LambdaModel.of".equals(expression.getMethodExpression().getQualifiedName()))
-                    .forEach(expression -> {
-                        PsiExpression[] args = expression.getArgumentList().getExpressions();
-                        // LambdaModel.of with model getter and setter should have exactly 3 params
-                        if (args.length != 3) {
-                            return;
-                        }
-                        PsiExpression modelDef = args[0];
-                        PsiExpression getterDef = args[1];
-                        PsiExpression setterDef = args[2];
-                        String getterStr = getterDef.getText();
-                        String setterStr = setterDef.getText();
-                        PsiType modelDefType = modelDef.getType();
-                        boolean isGet = getterStr.contains("::get") && getterStr.replace("::get", "/").equals(setterStr.replace("::set", "/"));
-                        boolean isBoolIs = getterStr.contains("::is") && getterStr.replace("::is", "/").equals(setterStr.replace("::set", "/"));
+            root.accept(new JavaRecursiveElementWalkingVisitor() {
 
-                        // First param is assignable to IModel and following two looks like getter and setter
-                        if (
-                                modelDefType == null ||
-                                        !PsiType.getTypeByName("org.apache.wicket.model.IModel", root.getProject(), root.getResolveScope()).isAssignableFrom(modelDefType) ||
-                                        !(isGet || isBoolIs)
-                                ) {
-                            return;
-                        }
+                @Override
+                public void visitMethodCallExpression(PsiMethodCallExpression expression) {
+                    if ("LambdaModel.of".equals(expression.getMethodExpression().getQualifiedName())) {
+                        addLambdaModelFoldDescriptor(expression);
+                    }
+                    super.visitMethodCallExpression(expression);
+                }
 
-                        // Add folding descriptor if we've got here
-                        descriptors.add(new FoldGetSetDescriptor(
-                                expression.getNode(),
-                                new TextRange(getterDef.getTextRange().getStartOffset(), setterDef.getTextRange().getEndOffset()),
-                                group,
-                                expression,
-                                getterStr,
-                                isBoolIs
-                        ));
-                    });
+                private void addLambdaModelFoldDescriptor(PsiMethodCallExpression expression) {
+                    PsiExpression[] args = expression.getArgumentList().getExpressions();
+                    // LambdaModel.of with model getter and setter should have exactly 3 params
+                    // 2 params is read only and is already short enough
+                    if (args.length != 3) {
+                        return;
+                    }
+                    PsiExpression modelDef = args[0];
+                    PsiExpression getterDef = args[1];
+                    PsiExpression setterDef = args[2];
+                    String getterStr = getterDef.getText();
+                    String setterStr = setterDef.getText();
+                    PsiType modelDefType = modelDef.getType();
+                    boolean hasGetterAndSetter =
+                            (getterStr.contains(GET_PREFIX) && getterStr.replace(GET_PREFIX, "/").equals(setterStr.replace(SET_PREFIX, "/"))) ||
+                                    (getterStr.contains(IS_PREFIX) && getterStr.replace(IS_PREFIX, "/").equals(setterStr.replace(SET_PREFIX, "/")));
+
+                    // First param is assignable to IModel and following two looks like getter and setter
+                    if (
+                            modelDefType == null ||
+                                    !PsiType.getTypeByName("org.apache.wicket.model.IModel", root.getProject(), root.getResolveScope()).isAssignableFrom(modelDefType) ||
+                                    !hasGetterAndSetter
+                            ) {
+                        return;
+                    }
+
+                    descriptors.add(
+                            new FoldGetSetDescriptor(
+                                    expression,
+                                    new TextRange(getterDef.getTextRange().getStartOffset(), setterDef.getTextRange().getEndOffset()),
+                                    getterStr
+                            )
+                    );
+                }
+
+            });
         }
+
         return descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
     }
 
@@ -83,27 +92,21 @@ public class LambdaModelFoldingBuilder extends FoldingBuilderEx {
 
     static class FoldGetSetDescriptor extends FoldingDescriptor {
 
-        final PsiMethodCallExpression expression;
         final String getterStr;
-        final boolean isBoolIs;
+        final String prefix;
 
-        FoldGetSetDescriptor(@NotNull ASTNode node, @NotNull TextRange range, @Nullable FoldingGroup group, PsiMethodCallExpression expression, String getterStr, boolean isBoolIs) {
-            super(node, range, group);
-            this.expression = expression;
+        FoldGetSetDescriptor(PsiMethodCallExpression expression, @NotNull TextRange range, String getterStr) {
+            // Intellij doesn't show collapse/expand icon if the expression was already one-line
+            // Will show for >1 liners
+            super(expression.getNode(), range);
             this.getterStr = getterStr;
-            this.isBoolIs = isBoolIs;
+            this.prefix = getterStr.contains(IS_PREFIX) ? IS_PREFIX : GET_PREFIX;
         }
 
         @Nullable
         @Override
         public String getPlaceholderText() {
-            if (isBoolIs) {
-                // Shorten is and set into one is/set
-                return getterStr.replace("::is", "::is/set");
-            } else {
-                // Shorten get and set into one get/set
-                return getterStr.replace("::get", "::get/set");
-            }
+            return getterStr.replace(prefix, prefix+SET_SUFFIX);
         }
     }
 }

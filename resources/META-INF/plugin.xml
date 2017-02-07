@@ -1,8 +1,8 @@
-<idea-plugin version="2">
+<idea-plugin>
 
   <id>pro.kondratev.wicketlambdafold</id>
   <name>WicketLambdaFold</name>
-  <version>0.1</version>
+  <version>0.1.1</version>
   <vendor email="andrew@kondratev.pro">Andrew Kondratev</vendor>
 
   <description>
