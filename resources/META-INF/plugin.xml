@@ -15,7 +15,18 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <lang.foldingBuilder language="JAVA" implementationClass="pro.kondratev.wicketlambdafold.LambdaModelFoldingBuilder"/>
+    <intentionAction>
+      <className>pro.kondratev.wicketlambdafold.CreateWicketHtmlIntention</className>
+      <bundleName>pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle</bundleName>
+      <categoryKey>intention.category.wicket.html</categoryKey>
+    </intentionAction>
   </extensions>
+
+  <application-components>
+    <component>
+      <implementation-class>pro.kondratev.wicketlambdafold.WicketLambdaFoldPlugin</implementation-class>
+    </component>
+  </application-components>
 
   <actions>
   </actions>
