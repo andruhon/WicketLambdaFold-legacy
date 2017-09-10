@@ -2,13 +2,16 @@
 
   <id>pro.kondratev.wicketlambdafold</id>
   <name>WicketLambdaFold</name>
-  <version>0.1.1</version>
+  <version>0.2.0</version>
   <vendor email="andrew@kondratev.pro">Andrew Kondratev</vendor>
 
   <description>
     Folds/Shortens wicket lambda model's getter and setter references.
     So LambdaModel.of(model, Entity::getSomething, Entity::setSomething)
     becomes LambdaModel.of(model, Entity::get/setSomething).
+
+    Also adds intentions to create HTML and .properties files for Wicket panels and pages.
+    (Subclasses of org.apache.wicket.markup.html.panel.Panel or org.apache.wicket.Page)
   </description>
 
   <idea-version since-build="145.0"/>
@@ -19,6 +22,19 @@
       <className>pro.kondratev.wicketlambdafold.CreateWicketHtmlIntention</className>
       <bundleName>pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle</bundleName>
       <categoryKey>intention.category.wicket.html</categoryKey>
+      <descriptionDirectoryName>CreateWicketHtmlIntention</descriptionDirectoryName>
+    </intentionAction>
+    <intentionAction>
+      <className>pro.kondratev.wicketlambdafold.CreateWicketPropertiesIntention</className>
+      <bundleName>pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle</bundleName>
+      <categoryKey>intention.category.wicket.html</categoryKey>
+      <descriptionDirectoryName>CreateWicketPropertiesIntention</descriptionDirectoryName>
+    </intentionAction>
+    <intentionAction>
+      <className>pro.kondratev.wicketlambdafold.CreateWicketHtmlAndPropertiesIntention</className>
+      <bundleName>pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle</bundleName>
+      <categoryKey>intention.category.wicket.html</categoryKey>
+      <descriptionDirectoryName>CreateWicketHtmlAndPropertiesIntention</descriptionDirectoryName>
     </intentionAction>
   </extensions>
 
