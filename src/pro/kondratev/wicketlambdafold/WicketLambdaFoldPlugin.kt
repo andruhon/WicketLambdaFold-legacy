@@ -9,7 +9,6 @@ class WicketLambdaFoldPlugin : ApplicationComponent {
     }
 
     override fun initComponent() {
-        System.out.println("init WicketLambdaFold plugin")
     }
 
     override fun disposeComponent() {

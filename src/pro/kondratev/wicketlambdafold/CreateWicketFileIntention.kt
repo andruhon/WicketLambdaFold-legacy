@@ -23,6 +23,10 @@ abstract class CreateWicketFileIntention : BaseElementAtCaretIntentionAction() {
     fun hasNoResourceFile(ofExtension: String, project: Project, editor: Editor?, element: PsiElement): Boolean {
         if (element.parent !is PsiClass) return false
         val psiClass = element.parent as PsiClass
+        if (psiClass.containingFile == null || psiClass.containingFile.containingDirectory == null) {
+            // Do not show intent, if file or directory is not available
+            return false
+        }
         return (
             isSubclassOfApplicableClasses(psiClass) &&
             psiClass.containingFile.containingDirectory.findFile(psiClass.name.plus(ofExtension)) == null
