@@ -79,7 +79,7 @@ abstract class CreateWicketFileIntention : BaseElementAtCaretIntentionAction() {
         when (getApplicableSuperclassFQN(psiClass)) {
             panelQualifier -> newFile.add(XmlElementFactory.getInstance(project).createTagFromText("<wicket:panelQualifier> </wicket:panelQualifier>"))
             pageQualifier -> newFile.add(XmlElementFactory.getInstance(project).createTagFromText("<wicket:extend> </wicket:extend>"))
-            else -> throw IllegalStateException("unexpected supers: "+psiClass.supers)
+            else -> IllegalStateException("unexpected supers: "+psiClass.supers)
         }
         OpenFileAction.openFile(newFile.virtualFile, project)
     }
