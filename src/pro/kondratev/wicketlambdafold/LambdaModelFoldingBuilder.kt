@@ -7,6 +7,7 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.*
 import com.intellij.psi.util.PsiTreeUtil
+import pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle.LAMBDA_MODEL_NAME
 import java.util.*
 
 class LambdaModelFoldingBuilder : FoldingBuilderEx() {
@@ -14,11 +15,11 @@ class LambdaModelFoldingBuilder : FoldingBuilderEx() {
     override fun buildFoldRegions(root: PsiElement, document: Document, b: Boolean): Array<FoldingDescriptor> {
         val descriptors = ArrayList<FoldingDescriptor>()
 
-        if (PsiTreeUtil.findChildrenOfType(root, PsiImportStatement::class.java).any { "org.apache.wicket.model.LambdaModel" == it.qualifiedName }) {
+        if (PsiTreeUtil.findChildrenOfType(root, PsiImportStatement::class.java).any { WicketLambdaFoldBundle.LAMBDA_MODEL_FQN == it.qualifiedName }) {
             root.accept(object : JavaRecursiveElementWalkingVisitor() {
 
                 override fun visitMethodCallExpression(expression: PsiMethodCallExpression) {
-                    if ("LambdaModel.of" == expression.methodExpression.qualifiedName) {
+                    if (LAMBDA_MODEL_NAME + ".of" == expression.methodExpression.qualifiedName) {
                         addLambdaModelFoldDescriptor(expression)
                     }
                     super.visitMethodCallExpression(expression)
