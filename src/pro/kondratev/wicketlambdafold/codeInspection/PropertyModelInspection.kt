@@ -5,7 +5,12 @@ import com.intellij.codeInspection.AbstractBaseJavaLocalInspectionTool
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.MessageType
+import com.intellij.openapi.ui.popup.Balloon
+import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.wm.WindowManager
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiImmediateClassType
 import com.intellij.psi.impl.source.tree.java.PsiLiteralExpressionImpl
@@ -13,6 +18,7 @@ import com.intellij.psi.impl.source.tree.java.PsiReferenceExpressionImpl
 import com.intellij.psi.util.PropertyUtilBase
 import com.intellij.psi.util.PsiTypesUtil
 import com.intellij.psi.util.PsiUtil
+import com.intellij.ui.awt.RelativePoint
 import com.siyeh.ig.psiutils.ImportUtils
 import org.jetbrains.annotations.NotNull
 import pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle.*
@@ -71,20 +77,18 @@ class PropertyModelInspection : AbstractBaseJavaLocalInspectionTool() {
         override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
             val element = descriptor.psiElement
             when (element) {
-                is PsiNewExpression -> {
-                    fixPropertyModelNew(element, project)
+                is PsiNewExpression -> fixPropertyModel(project, element)
+                is PsiMethodCallExpression -> fixPropertyModel(project, element)
+                else -> {
+                    warning(project, "Unexpected element type")
+                    return
                 }
-                is PsiMethodCallExpression -> {
-                    // TODO PropertyModel.of
-                }
-                else -> return
             }
         }
 
-        private fun fixPropertyModelNew(element: PsiNewExpression, project: Project) {
+        private fun fixPropertyModel(project: Project, element: PsiExpression) {
             val factory = JavaPsiFacade.getElementFactory(project)
-            val resolveHelper = JavaPsiFacade.getInstance(project).resolveHelper
-            ImportUtils.addImportIfNeeded(resolveHelper.resolveReferencedClass(LAMBDA_MODEL_FQN, element)!!, element)
+            importLambdaIfNeeded(project, element)
             val args = element.children.find { it is PsiExpressionList } as PsiExpressionList
             val (modelArg, propNameArg) = args.expressions
             assert(propNameArg is PsiLiteralExpressionImpl)
@@ -101,7 +105,27 @@ class PropertyModelInspection : AbstractBaseJavaLocalInspectionTool() {
                 }
                 val lambdaModelExpression = factory.createExpressionFromText(LAMBDA_MODEL_NAME + ".of(" + newArgs.joinToString(", ") + ")", element)
                 element.replace(lambdaModelExpression)
+            } else {
+                warning(project, "Can't find getter for property " + propName)
             }
+        }
+
+        private fun importLambdaIfNeeded(project: Project, element: PsiElement) {
+            val resolveHelper = JavaPsiFacade.getInstance(project).resolveHelper
+            ImportUtils.addImportIfNeeded(resolveHelper.resolveReferencedClass(LAMBDA_MODEL_FQN, element)!!, element)
+        }
+
+        private fun warning(project: Project, message: String) {
+            val logger = Logger.getInstance(this.javaClass.simpleName)
+            logger.warn(message)
+            val statusBar = WindowManager.getInstance().getStatusBar(project)
+
+            JBPopupFactory.getInstance()
+                    .createHtmlTextBalloonBuilder(message, MessageType.WARNING, null)
+                    .setFadeoutTime(7500)
+                    .createBalloon()
+                    .show(RelativePoint.getCenterOf(statusBar.component),
+                            Balloon.Position.atRight)
         }
 
     }
