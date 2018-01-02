@@ -1,56 +1,58 @@
 <idea-plugin>
 
-  <id>pro.kondratev.wicketlambdafold</id>
-  <name>WicketLambdaFold</name>
-  <version>0.3.0</version>
-  <vendor email="andrew@kondratev.pro">Andrew Kondratev</vendor>
+    <id>pro.kondratev.wicketlambdafold</id>
+    <name>WicketLambdaFold</name>
+    <version>0.4.0</version>
+    <vendor email="andrew@kondratev.pro">Andrew Kondratev</vendor>
 
-  <description>
-    Folds/Shortens wicket lambda model'propertyModelQualifier getter and setter references.
-    So LambdaModel.of(model, Entity::getSomething, Entity::setSomething)
-    becomes LambdaModel.of(model, Entity::get/setSomething).
+    <description>
+        Folds/Shortens wicket lambda model'propertyModelQualifier getter and setter references.
+        So LambdaModel.of(model, Entity::getSomething, Entity::setSomething)
+        becomes LambdaModel.of(model, Entity::get/setSomething).
 
-    Usages of PropertyModel highlighted as warnings.
+        Usages of PropertyModel highlighted as warnings. Suggests quick fix to replace PropertyModel with LambdaModel (only works with simple properties, chained props coming soon).
 
-    Also adds intentions to create HTML and .properties files for Wicket panels and pages.
-    (Subclasses of org.apache.wicket.markup.html.panel.Panel or org.apache.wicket.Page)
-  </description>
+        Also adds intentions to create HTML and .properties files for Wicket panels and pages.
+        (Subclasses of org.apache.wicket.markup.html.panel.Panel or org.apache.wicket.Page)
+    </description>
 
-  <idea-version since-build="145.0"/>
+    <change-notes>Quick fix to replace PropertyModel with LambdaModel</change-notes>
 
-  <extensions defaultExtensionNs="com.intellij">
-    <lang.foldingBuilder language="JAVA" implementationClass="pro.kondratev.wicketlambdafold.LambdaModelFoldingBuilder"/>
-    <intentionAction>
-      <className>pro.kondratev.wicketlambdafold.intention.CreateWicketHtmlIntention</className>
-      <bundleName>pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle</bundleName>
-      <categoryKey>intention.category.wicket.html</categoryKey>
-      <descriptionDirectoryName>CreateWicketHtmlIntention</descriptionDirectoryName>
-    </intentionAction>
-    <intentionAction>
-      <className>pro.kondratev.wicketlambdafold.intention.CreateWicketPropertiesIntention</className>
-      <bundleName>pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle</bundleName>
-      <categoryKey>intention.category.wicket.html</categoryKey>
-      <descriptionDirectoryName>CreateWicketPropertiesIntention</descriptionDirectoryName>
-    </intentionAction>
-    <intentionAction>
-      <className>pro.kondratev.wicketlambdafold.intention.CreateWicketHtmlAndPropertiesIntention</className>
-      <bundleName>pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle</bundleName>
-      <categoryKey>intention.category.wicket.html</categoryKey>
-      <descriptionDirectoryName>CreateWicketHtmlAndPropertiesIntention</descriptionDirectoryName>
-    </intentionAction>
-  </extensions>
+    <idea-version since-build="145.0"/>
 
-  <application-components>
-    <component>
-      <implementation-class>pro.kondratev.wicketlambdafold.WicketLambdaFoldPlugin</implementation-class>
-    </component>
-  </application-components>
+    <extensions defaultExtensionNs="com.intellij">
+        <lang.foldingBuilder language="JAVA" implementationClass="pro.kondratev.wicketlambdafold.LambdaModelFoldingBuilder"/>
+        <intentionAction>
+            <className>pro.kondratev.wicketlambdafold.intention.CreateWicketHtmlIntention</className>
+            <bundleName>pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle</bundleName>
+            <categoryKey>intention.category.wicket.html</categoryKey>
+            <descriptionDirectoryName>CreateWicketHtmlIntention</descriptionDirectoryName>
+        </intentionAction>
+        <intentionAction>
+            <className>pro.kondratev.wicketlambdafold.intention.CreateWicketPropertiesIntention</className>
+            <bundleName>pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle</bundleName>
+            <categoryKey>intention.category.wicket.html</categoryKey>
+            <descriptionDirectoryName>CreateWicketPropertiesIntention</descriptionDirectoryName>
+        </intentionAction>
+        <intentionAction>
+            <className>pro.kondratev.wicketlambdafold.intention.CreateWicketHtmlAndPropertiesIntention</className>
+            <bundleName>pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle</bundleName>
+            <categoryKey>intention.category.wicket.html</categoryKey>
+            <descriptionDirectoryName>CreateWicketHtmlAndPropertiesIntention</descriptionDirectoryName>
+        </intentionAction>
+    </extensions>
 
-  <actions>
-  </actions>
+    <application-components>
+        <component>
+            <implementation-class>pro.kondratev.wicketlambdafold.WicketLambdaFoldPlugin</implementation-class>
+        </component>
+    </application-components>
 
-  <extensions defaultExtensionNs="com.intellij">
-    <inspectionToolProvider implementation="pro.kondratev.wicketlambdafold.codeInspection.PropertyModelInspectionProvider" />
-  </extensions>
+    <actions>
+    </actions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <inspectionToolProvider implementation="pro.kondratev.wicketlambdafold.codeInspection.PropertyModelInspectionProvider"/>
+    </extensions>
 
 </idea-plugin>
