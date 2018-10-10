@@ -2,6 +2,7 @@ package pro.kondratev.wicketlambdafold.intention
 
 import com.intellij.codeInsight.intention.BaseElementAtCaretIntentionAction
 import com.intellij.ide.actions.OpenFileAction
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
@@ -14,9 +15,14 @@ import pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle
  */
 abstract class CreateWicketFileIntention : BaseElementAtCaretIntentionAction() {
 
-    private val panelQualifier = "org.apache.wicket.markup.html.panelQualifier.Panel";
+    private val panelQualifier = "org.apache.wicket.markup.html.panel.Panel";
     private val pageQualifier = "org.apache.wicket.Page"
     private val applicableClasses = listOf(panelQualifier, pageQualifier)
+
+    companion object {
+        private val MAX_SUPERCLASS_SCAN_DEPTH = 30
+        val logger = Logger.getInstance(javaClass.enclosingClass.simpleName)
+    }
 
     /**
      * Used as a criteria for availability of this action
@@ -34,13 +40,21 @@ abstract class CreateWicketFileIntention : BaseElementAtCaretIntentionAction() {
         )
     }
 
+    fun isSubclassOfApplicableClasses(c: PsiClass?): Boolean {
+        return isSubclassOfApplicableClasses(c, MAX_SUPERCLASS_SCAN_DEPTH)
+    }
+
     /**
      * Find recursively if the class ends up extending one of applicable classes
      */
-    fun isSubclassOfApplicableClasses(c: PsiClass?): Boolean {
+    fun isSubclassOfApplicableClasses(c: PsiClass?, fuse: Int): Boolean {
         if (c == null) return false
+        if (fuse <= 0) {
+            logger.error(String.format("isSubclassOfApplicableClasses exceeds the MAX_SUPERCLASS_SCAN_DEPTH of %d", MAX_SUPERCLASS_SCAN_DEPTH))
+            return false
+        }
         // XXX maybe add a fuse for very long inheritance chains
-        return c.supers.any { applicableClasses.contains(it.qualifiedName) || isSubclassOfApplicableClasses(it) }
+        return c.supers.any { applicableClasses.contains(it.qualifiedName) || isSubclassOfApplicableClasses(it, fuse-1) }
     }
 
     fun getApplicableSuperclassFQN(c: PsiClass?): String? {
