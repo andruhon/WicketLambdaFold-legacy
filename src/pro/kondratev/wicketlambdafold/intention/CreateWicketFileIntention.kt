@@ -15,13 +15,14 @@ import pro.kondratev.wicketlambdafold.WicketLambdaFoldBundle
  */
 abstract class CreateWicketFileIntention : BaseElementAtCaretIntentionAction() {
 
-    private val panelQualifier = "org.apache.wicket.markup.html.panel.Panel";
-    private val pageQualifier = "org.apache.wicket.Page"
-    private val applicableClasses = listOf(panelQualifier, pageQualifier)
-
     companion object {
-        private val MAX_SUPERCLASS_SCAN_DEPTH = 30
-        val logger = Logger.getInstance(javaClass.enclosingClass.simpleName)
+        private const val MAX_SUPERCLASS_SCAN_DEPTH = 30
+        private const val PANEL_QUALIFIER = "org.apache.wicket.markup.html.panel.Panel"
+        private const val PAGE_QUALIFIER = "org.apache.wicket.Page"
+        private const val PANEL_CONTENT = "<wicket:panel> </wicket:panel>";
+        private const val PAGE_CONTENT = "<wicket:extend> </wicket:extend>";
+        private val APPLICABLE_CLASSES = listOf(PANEL_QUALIFIER, PAGE_QUALIFIER)
+        private val logger = Logger.getInstance(javaClass.enclosingClass.simpleName)
     }
 
     /**
@@ -40,30 +41,30 @@ abstract class CreateWicketFileIntention : BaseElementAtCaretIntentionAction() {
         )
     }
 
-    fun isSubclassOfApplicableClasses(c: PsiClass?): Boolean {
+    protected fun isSubclassOfApplicableClasses(c: PsiClass?): Boolean {
         return isSubclassOfApplicableClasses(c, MAX_SUPERCLASS_SCAN_DEPTH)
     }
 
     /**
      * Find recursively if the class ends up extending one of applicable classes
      */
-    fun isSubclassOfApplicableClasses(c: PsiClass?, fuse: Int): Boolean {
+    protected fun isSubclassOfApplicableClasses(c: PsiClass?, fuse: Int): Boolean {
         if (c == null) return false
         if (fuse <= 0) {
             logger.error(String.format("isSubclassOfApplicableClasses exceeds the MAX_SUPERCLASS_SCAN_DEPTH of %d", MAX_SUPERCLASS_SCAN_DEPTH))
             return false
         }
         // XXX maybe add a fuse for very long inheritance chains
-        return c.supers.any { applicableClasses.contains(it.qualifiedName) || isSubclassOfApplicableClasses(it, fuse-1) }
+        return c.supers.any { APPLICABLE_CLASSES.contains(it.qualifiedName) || isSubclassOfApplicableClasses(it, fuse-1) }
     }
 
-    fun getApplicableSuperclassFQN(c: PsiClass?): String? {
+    protected fun getApplicableSuperclassFQN(c: PsiClass?): String? {
         if (c == null) return null
         // XXX maybe add a fuse for very long inheritance chains
         return c.supers.fold<PsiClass?, String?>(null) { acc, pc ->
             if (acc != null) return acc
             if (pc == null) return null
-            if (applicableClasses.contains(pc.qualifiedName)) {
+            if (APPLICABLE_CLASSES.contains(pc.qualifiedName)) {
                 return pc.qualifiedName
             } else {
                 return getApplicableSuperclassFQN(pc)
@@ -81,18 +82,18 @@ abstract class CreateWicketFileIntention : BaseElementAtCaretIntentionAction() {
 
     fun createPropertiesFile(project: Project, editor: Editor?, element: PsiElement) {
         assert(element.parent is PsiClass)
-        val psiClass = element.parent as PsiClass;
+        val psiClass = element.parent as PsiClass
         val newFile = psiClass.containingFile.containingDirectory.createFile(psiClass.name.plus(".properties"))
         OpenFileAction.openFile(newFile.virtualFile, project)
     }
 
     fun createHtmlFile(project: Project, editor: Editor?, element: PsiElement) {
         assert(element.parent is PsiClass)
-        val psiClass = element.parent as PsiClass;
+        val psiClass = element.parent as PsiClass
         val newFile = psiClass.containingFile.containingDirectory.createFile(psiClass.name.plus(".html"))
         when (getApplicableSuperclassFQN(psiClass)) {
-            panelQualifier -> newFile.add(XmlElementFactory.getInstance(project).createTagFromText("<wicket:panelQualifier> </wicket:panelQualifier>"))
-            pageQualifier -> newFile.add(XmlElementFactory.getInstance(project).createTagFromText("<wicket:extend> </wicket:extend>"))
+            PANEL_QUALIFIER -> newFile.add(XmlElementFactory.getInstance(project).createTagFromText(PANEL_CONTENT))
+            PAGE_QUALIFIER -> newFile.add(XmlElementFactory.getInstance(project).createTagFromText(PAGE_CONTENT))
             else -> IllegalStateException("unexpected supers: "+psiClass.supers)
         }
         OpenFileAction.openFile(newFile.virtualFile, project)

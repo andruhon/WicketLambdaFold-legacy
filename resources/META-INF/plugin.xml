@@ -2,7 +2,7 @@
 
     <id>pro.kondratev.wicketlambdafold</id>
     <name>WicketLambdaFold</name>
-    <version>0.4.2</version>
+    <version>0.4.3</version>
     <vendor email="andrew@kondratev.pro">Andrew Kondratev</vendor>
 
     <description>
@@ -15,8 +15,6 @@
         Also adds intentions to create HTML and .properties files for Wicket panels and pages.
         (Subclasses of org.apache.wicket.markup.html.panel.Panel or org.apache.wicket.Page)
     </description>
-
-    <change-notes>Quick fix to replace PropertyModel with LambdaModel</change-notes>
 
     <idea-version since-build="173.0"/>
 
