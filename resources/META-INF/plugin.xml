@@ -6,7 +6,7 @@
     <vendor email="andrew@kondratev.pro">Andrew Kondratev</vendor>
 
     <description>
-        Folds/Shortens wicket lambda model'propertyModelQualifier getter and setter references.
+        Folds/Shortens wicket lambda model's getter and setter references.
         So LambdaModel.of(model, Entity::getSomething, Entity::setSomething)
         becomes LambdaModel.of(model, Entity::get/setSomething).
 
