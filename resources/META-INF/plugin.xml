@@ -2,7 +2,7 @@
 
     <id>pro.kondratev.wicketlambdafold</id>
     <name>WicketLambdaFold</name>
-    <version>0.4.3</version>
+    <version>0.4.4</version>
     <vendor email="andrew@kondratev.pro">Andrew Kondratev</vendor>
 
     <description>
@@ -16,7 +16,7 @@
         (Subclasses of org.apache.wicket.markup.html.panel.Panel or org.apache.wicket.Page)
     </description>
 
-    <idea-version since-build="173.0"/>
+    <idea-version since-build="183.0"/>
 
     <depends>com.intellij.modules.java</depends>
 
