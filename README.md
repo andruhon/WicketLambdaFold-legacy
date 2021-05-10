@@ -1,6 +1,8 @@
 # ARCHIVED
 
-This is a legacy codebase, new gradle build can be found in https://github.com/andruhon/WicketLambdaFold
+Moved to https://github.com/andruhon/WicketLambdaFold
+
+This is a legacy code base, please go to https://github.com/andruhon/WicketLambdaFold to find new code.
 
 WicketLambdaFold
 ----------------
